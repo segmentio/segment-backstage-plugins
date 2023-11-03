@@ -28,6 +28,7 @@ import scaffolder from './plugins/scaffolder';
 import proxy from './plugins/proxy';
 import techdocs from './plugins/techdocs';
 import search from './plugins/search';
+import proxySigV4 from './plugins/proxy-sigv4';
 import { PluginEnvironment } from './types';
 import { ServerPermissionClient } from '@backstage/plugin-permission-node';
 import { DefaultIdentityClient } from '@backstage/plugin-auth-node';
@@ -82,6 +83,7 @@ async function main() {
   const scaffolderEnv = useHotMemoize(module, () => createEnv('scaffolder'));
   const authEnv = useHotMemoize(module, () => createEnv('auth'));
   const proxyEnv = useHotMemoize(module, () => createEnv('proxy'));
+  const proxySigvV4Env = useHotMemoize(module, () => createEnv('proxy-sigv4'));
   const techdocsEnv = useHotMemoize(module, () => createEnv('techdocs'));
   const searchEnv = useHotMemoize(module, () => createEnv('search'));
   const appEnv = useHotMemoize(module, () => createEnv('app'));
@@ -92,6 +94,7 @@ async function main() {
   apiRouter.use('/auth', await auth(authEnv));
   apiRouter.use('/techdocs', await techdocs(techdocsEnv));
   apiRouter.use('/proxy', await proxy(proxyEnv));
+  apiRouter.use('/proxy-sigv4', await proxySigV4(proxySigvV4Env));
   apiRouter.use('/search', await search(searchEnv));
 
   // Add backends ABOVE this line; this 404 handler is the catch-all fallback
