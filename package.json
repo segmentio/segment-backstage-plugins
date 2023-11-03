@@ -15,6 +15,7 @@
     "build:backend": "yarn workspace backend build",
     "build:all": "backstage-cli repo build --all",
     "build-image": "yarn workspace backend build-image",
+    "build": "lerna run build",
     "tsc": "tsc",
     "tsc:full": "tsc --skipLibCheck false --incremental false",
     "clean": "backstage-cli repo clean",
@@ -27,8 +28,7 @@
     "prettier:check": "prettier --check .",
     "create-plugin": "backstage-cli new --scope segment --no-private",
     "remove-plugin": "backstage-cli remove-plugin",
-    "prepare": "husky install",
-    "gitleaks:scan": "gitleaks detect --source . --verbose"
+    "prepare": "husky install"
   },
   "workspaces": {
     "packages": [
