@@ -8,8 +8,10 @@ Loosely modeled after the official [AWS SigV4 Proxy project (awslabs/aws-sigv4-p
 
 ## Getting started
 
-This plugin has already been added to the Backstage app in this repository, meaning you'll be able to access it by
-starting the app, and then navigating to [/api/proxy-sigv4/\*](http://localhost:7007/api/proxy-sigv4/*).
+This plugin has already been added to the Backstage app in this repository, meaning you'll be able to try out
+the plugin by firstly adding your [Proxy Sigv4 Configuration](#configuration) to the `app-config.yaml` located in
+the root folder of this repository. After that, you should be able to access it by starting the app, and then navigating
+to [/api/proxy-sigv4/\*](http://localhost:7007/api/proxy-sigv4/*).
 
 This backend plugin can also be started in a standalone mode via `yarn start` from within this package; however, it will
 have limited functionality and this process is most convenient when developing the plugin itself. If you develop using
@@ -21,7 +23,7 @@ the standalone server, note that the plugin is mounted at the backend root and _
 ### Add the backend plugin as a dependency to `packages/backend`
 
 ```sh
-yarn add --cwd packages/backend '@segment/backstage-plugin-proxy-sigv4-backend@*'
+yarn add --cwd packages/backend '@segment/backstage-plugin-proxy-sigv4-backend'
 ```
 
 ### Create a new backend plugin wrapper module
