@@ -16,7 +16,7 @@
   "repository": {
     "type": "git",
     "url": "github:segmentio/segment-backstage-plugins",
-    "directory": "plugins/backend/backstage-plugin-proxy-sigv4-backend"
+    "directory": "plugins/proxy-sigv4-backend"
   },
   "scripts": {
     "start": "backstage-cli package start",

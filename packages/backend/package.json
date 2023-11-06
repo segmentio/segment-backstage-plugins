@@ -34,7 +34,7 @@
     "@backstage/plugin-search-backend-node": "^1.2.10",
     "@backstage/plugin-techdocs-backend": "^1.8.0",
     "app": "link:../app",
-    "@segment/backstage-plugin-proxy-sigv4-backend": "link:../../plugins/backstage-plugin-proxy-sigv4-backend",
+    "@segment/backstage-plugin-proxy-sigv4-backend": "link:../../plugins/proxy-sigv4-backend",
     "better-sqlite3": "^8.0.0",
     "dockerode": "^3.3.1",
     "express": "^4.17.1",
