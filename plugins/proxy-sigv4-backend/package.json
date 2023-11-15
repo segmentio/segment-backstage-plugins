@@ -1,5 +1,6 @@
 {
   "name": "@segment/backstage-plugin-proxy-sigv4-backend",
+  "description": "Backstage backend plugin that configures endpoints for signing and proxying HTTP requests with AWS SigV4",
   "version": "0.1.0",
   "main": "src/index.ts",
   "types": "src/index.ts",
