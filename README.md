@@ -2,9 +2,8 @@
 <div align="center">
   <a href="https://segment.com">
     <picture>
-      <source media="(prefers-color-scheme: dark)" srcset="media/twilio-segment-dark.png">
-      <source media="(prefers-color-scheme: light)" srcset="media/twilio-segment-light.png">
-      <img alt="Twilio Segment" src="media/twilio-segment-light.png" width="200">
+      <source media="(prefers-color-scheme: dark)" srcset="media/twilio-segment-dark.png" />
+      <img alt="Twilio Segment" src="media/twilio-segment-light.png" width="200" />
     </picture>
   </a>
   <br>
