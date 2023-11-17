@@ -1,0 +1,3 @@
+proxysigv4:
+  '/test':
+    target: https://google.com
