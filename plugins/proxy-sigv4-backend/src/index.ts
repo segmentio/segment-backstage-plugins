@@ -16,3 +16,4 @@
 
 export { createRouter } from './service/router';
 export type { RouterOptions } from './service/router';
+export { proxySigV4Plugin as default } from './plugin';

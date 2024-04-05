@@ -6643,6 +6643,8 @@
 "@segment/backstage-plugin-proxy-sigv4-backend@link:plugins/proxy-sigv4-backend":
   version "0.1.0"
   dependencies:
+    "@backstage/backend-common" "^0.21.6"
+    "@backstage/backend-plugin-api" "^0.6.16"
     agentkeepalive "^4.2.1"
     aws-sdk "^2.1181.0"
     express "^4.17.1"

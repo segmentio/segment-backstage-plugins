@@ -26,9 +26,26 @@ the standalone server, note that the plugin is mounted at the backend root and _
 yarn add --cwd packages/backend '@segment/backstage-plugin-proxy-sigv4-backend'
 ```
 
-### Create a new backend plugin wrapper module
+### New Backend System
 
-You'll need to add the plugin to the router in your `backend` package.
+The AWS SigV4 Proxy backend plugin has support for the [new backend system](https://backstage.io/docs/backend-system/). In your `packages/backend/src/index.ts` file, make the following changes:
+
+```diff
+  import { createBackend } from '@backstage/backend-defaults';
+  const backend = createBackend();
+  // ... other feature additions
+
++ // proxy-sigv4 plugin installation
++ backend.add(import('@segment/backstage-plugin-proxy-sigv4-backend'));
+
+  backend.start();
+```
+
+### Legacy Backend System
+
+#### Create a new backend plugin wrapper module
+
+If you are still using the legacy backend system, you'll need to add the plugin to the router in your `backend` package.
 
 You can do this by creating a file called `packages/backend/src/plugins/proxy-sigv4.ts`. Example content for
 `proxy-sigv4.ts` could be something like this.
@@ -48,7 +65,7 @@ export default async function createPlugin({
 }
 ```
 
-### Initialize the wrapper module and mount the router in `packages/backend`
+#### Initialize the wrapper module and mount the router in `packages/backend`
 
 With the `proxy-sigv4.ts` router setup in place, add the router to `packages/backend/src/index.ts`:
 
@@ -106,6 +123,19 @@ proxysigv4:
     roleArn: 'arn:aws:iam::<account>:role/<name>'
     roleSessionName: tempAssumeRoleSession ## optional
 ```
+
+### New Auth Services - Unauthorized Requests
+
+When using the new backend system with the [new auth services](https://backstage.io/docs/tutorials/auth-service-migration/), the `proxy-sigv4` backend plugin will by default allow unauthenticated requests.
+
+To prevent this behavior, provide the following configuration:
+
+```yaml
+proxysigv4:
+  allowUnauthenticatedRequests: false
+```
+
+Doing so will not add the auth policty that allows unauthenticated requests.
 
 ### Schema
 

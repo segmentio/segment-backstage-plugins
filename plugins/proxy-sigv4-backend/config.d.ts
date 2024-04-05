@@ -5,6 +5,14 @@ export interface Config {
    * start with a '/'.
    */
   proxysigv4?: {
+    /**
+     * When `true`, configures an auth policy when using the new backend system to allow
+     * unauthenticated requests to the `proxy-sigv4-backend` router.
+     *
+     * Defaults to `true`.
+     */
+    allowUnauthenticatedRequests?: boolean;
+  } & {
     [key: string]:
       | string
       | {
