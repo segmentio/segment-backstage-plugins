@@ -29,8 +29,8 @@
     "postpack": "backstage-cli package postpack"
   },
   "dependencies": {
-    "@backstage/backend-common": "^0.21.6",
-    "@backstage/backend-plugin-api": "^0.6.16",
+    "@backstage/backend-common": "^0.21.7",
+    "@backstage/backend-plugin-api": "^0.6.17",
     "agentkeepalive": "^4.2.1",
     "aws-sdk": "^2.1181.0",
     "express": "^4.17.1",
@@ -38,7 +38,7 @@
     "got4aws": "^1.2.1"
   },
   "devDependencies": {
-    "@backstage/cli": "^0.26.2",
+    "@backstage/cli": "^0.26.4",
     "@backstage/config": "^1.2.0",
     "@types/express": "^4.17.20",
     "winston": "^3.2.1",
