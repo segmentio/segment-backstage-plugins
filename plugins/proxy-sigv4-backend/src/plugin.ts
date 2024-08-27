@@ -1,4 +1,3 @@
-import { loggerToWinstonLogger } from '@backstage/backend-common';
 import {
   coreServices,
   createBackendPlugin,
@@ -16,9 +15,7 @@ export const proxySigV4Plugin = createBackendPlugin({
         http: coreServices.httpRouter,
       },
       async init({ config, logger, http }) {
-        http.use(
-          await createRouter({ logger: loggerToWinstonLogger(logger), config }),
-        );
+        http.use(await createRouter({ logger, config }));
 
         if (
           config.getOptionalBoolean(
