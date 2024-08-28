@@ -179,12 +179,12 @@ export async function buildMiddleware(
     try {
       const requestHeaders = filterHeaders(req.headers as HeadersMap);
       const targetUrl = new URL(req.url, target);
-      requestHeaders.host = targetUrl.host;
 
+      // request is provided to aws4.sign() and mutated in place for new headers
       const request: any = {
         method: req.method,
         protocol: targetUrl.protocol,
-        hostname: targetUrl.host,
+        host: targetUrl.host,
         path: req.url, // path + search
         headers: requestHeaders,
       };
