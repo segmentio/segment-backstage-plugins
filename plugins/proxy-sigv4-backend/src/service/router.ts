@@ -1,13 +1,22 @@
 import HttpAgent, { HttpsAgent } from 'agentkeepalive';
-import AWS from 'aws-sdk';
-import type { Config } from '@backstage/config';
+import * as aws4 from 'aws4';
 import express from 'express';
 import Router from 'express-promise-router';
-import got4aws from 'got4aws';
 import path from 'node:path';
-import type { Logger } from 'winston';
+import fetch from 'node-fetch';
+
+import {
+  fromNodeProviderChain,
+  fromTemporaryCredentials,
+} from '@aws-sdk/credential-providers';
+import type {
+  LoggerService,
+  RootConfigService,
+} from '@backstage/backend-plugin-api';
+import type { AwsCredentialIdentity } from '@smithy/types';
 
 const DEFAULT_CREDENTIAL_REFRESH_INTERVAL_MS = 30 * 1000;
+const CREDENTIAL_NEED_REFRESH_BUFFER = 5 * 60 * 1000; // Force a refresh 5 minutes before expiration
 
 export const REQUEST_HEADERS_ALLOWLIST = Object.freeze([
   'cache-control',
@@ -22,12 +31,12 @@ export const REQUEST_HEADERS_ALLOWLIST = Object.freeze([
 ]);
 
 export interface RouterOptions {
-  logger: Logger;
-  config: Config;
+  logger: LoggerService;
+  config: RootConfigService;
 }
 
 export interface MiddlewareOptions {
-  logger: Logger;
+  logger: LoggerService;
   routePath: string;
   routeConfig: RouteConfig;
 }
@@ -42,6 +51,7 @@ export interface RouteConfig {
 
 type HeadersMap = Record<string, string | string[]>;
 
+/** @internal */
 export function normalizeRoutePath(routePath: string): string {
   if (!routePath.startsWith('/')) {
     throw new TypeError(
@@ -52,6 +62,7 @@ export function normalizeRoutePath(routePath: string): string {
   return path.normalize(routePath);
 }
 
+/** @internal */
 export function normalizeRouteConfig(config: any): RouteConfig {
   const fullConfig =
     typeof config === 'string' ? { target: config } : { ...config };
@@ -91,9 +102,18 @@ export function normalizeRouteConfig(config: any): RouteConfig {
   return fullConfig;
 }
 
-export function buildMiddleware(
+/** @internal */
+export const credentialsNeedRefresh = (
+  credentials: AwsCredentialIdentity,
+): boolean =>
+  !!credentials.expiration &&
+  credentials.expiration.getTime() - Date.now() <
+    CREDENTIAL_NEED_REFRESH_BUFFER;
+
+/** @internal */
+export async function buildMiddleware(
   options: MiddlewareOptions,
-): express.RequestHandler {
+): Promise<express.RequestHandler> {
   const { logger, routePath, routeConfig } = options;
 
   logger.info(`Configuring route handler for '${routePath}'`);
@@ -104,46 +124,36 @@ export function buildMiddleware(
     roleSessionName = 'backstage-plugin-proxy-sigv4-backend',
   } = routeConfig;
 
-  const credentials = roleArn
-    ? new AWS.ChainableTemporaryCredentials({
+  const credentialsProvider = roleArn
+    ? fromTemporaryCredentials({
         params: {
           RoleArn: roleArn,
           RoleSessionName: roleSessionName,
         },
       })
-    : (AWS.config.credentials as AWS.Credentials);
+    : fromNodeProviderChain(); // default provider chain
 
-  // automatically refresh stale expirable credentials out of band to prevent cold caches from degrading the user experience
-  setInterval(() => {
-    if (credentials.needsRefresh()) {
-      credentials.refreshPromise().catch(err => {
-        logger.error(
-          `Failed to refresh temporary credentials with error: ${err.message} (routePath=${routePath}, roleArn=${roleArn}, roleSessionName=${roleSessionName})`,
-          {
-            error: err,
-            routePath,
-            roleArn,
-            roleSessionName,
-          },
-        );
-      });
+  // Immediately resolve credentials
+  let credentials = await credentialsProvider();
+
+  // automatically refresh stale expirable credentials out of band to help prevent cold caches from degrading the user experience
+  setInterval(async () => {
+    if (credentialsNeedRefresh(credentials)) {
+      await credentialsProvider()
+        .then(refreshedCredentials => (credentials = refreshedCredentials))
+        .catch(err => {
+          logger.error(
+            `Failed to refresh temporary credentials with error: ${err.message} (routePath=${routePath}, roleArn=${roleArn}, roleSessionName=${roleSessionName})`,
+            {
+              error: err,
+              routePath,
+              roleArn,
+              roleSessionName,
+            },
+          );
+        });
     }
   }, DEFAULT_CREDENTIAL_REFRESH_INTERVAL_MS).unref();
-
-  const client = got4aws({
-    providers: credentials,
-  }).extend({
-    prefixUrl: target,
-    headers: {
-      // got unnecessarily configures the user agent header with information about got itself. unset this default
-      'user-agent': undefined,
-    },
-    throwHttpErrors: false,
-    agent: {
-      http: new HttpAgent(),
-      https: new HttpsAgent(),
-    },
-  });
 
   const allowedHeaders = new Set<string>([
     ...REQUEST_HEADERS_ALLOWLIST,
@@ -151,10 +161,10 @@ export function buildMiddleware(
   ]);
 
   const filterHeaders = (input: HeadersMap) => {
-    const output: HeadersMap = {};
+    const output: Record<string, string> = {};
     Object.entries(input).forEach(([name, value]) => {
       if (allowedHeaders.has(name.toLocaleLowerCase())) {
-        output[name] = value!;
+        output[name] = Array.isArray(value) ? value.join(', ') : value;
       }
     });
 
@@ -168,31 +178,46 @@ export function buildMiddleware(
   ) => {
     try {
       const requestHeaders = filterHeaders(req.headers as HeadersMap);
+      const targetUrl = new URL(req.url, target);
 
-      const requestOptions: any = {
-        method: req.method as any,
-        searchParams: req.query as any,
-        headers: requestHeaders as any,
+      // request is provided to aws4.sign() and mutated in place for new headers
+      const request: any = {
+        method: req.method,
+        protocol: targetUrl.protocol,
+        host: targetUrl.host,
+        path: req.url, // path + search
+        headers: requestHeaders,
       };
 
-      if (req.is('application/json') && req.method !== 'GET') {
-        requestOptions.body = JSON.stringify(req.body);
+      if (req.method !== 'GET' && req.method !== 'HEAD') {
+        request.body = req.is('application/json')
+          ? JSON.stringify(req.body)
+          : req.body;
       }
 
-      const { headers, body, statusCode } = await client(
-        req.path.substring(1),
-        requestOptions,
-      );
+      aws4.sign(request, credentials);
 
-      const responseHeaders = filterHeaders(headers as HeadersMap);
+      const response = await fetch(targetUrl.toString(), {
+        method: request.method,
+        headers: request.headers,
+        body: request.body,
+        agent:
+          request.protocol === 'https:' ? new HttpsAgent() : new HttpAgent(),
+      });
 
-      res.status(statusCode).set(responseHeaders).send(body);
+      const responseHeaders = filterHeaders(response.headers.raw());
+
+      res
+        .status(response.status)
+        .set(responseHeaders)
+        .send(await response.buffer());
     } catch (err) {
       next(err);
     }
   };
 }
 
+/** @public */
 export async function createRouter(
   options: RouterOptions,
 ): Promise<express.Router> {
@@ -220,9 +245,22 @@ export async function createRouter(
     },
   ) as [string, RouteConfig][];
 
-  normalizedRoutePathsAndConfigs.forEach(([routePath, routeConfig]) => {
-    router.use(routePath, buildMiddleware({ logger, routePath, routeConfig }));
-  });
+  for (const [routePath, routeConfig] of normalizedRoutePathsAndConfigs) {
+    try {
+      router.use(
+        routePath,
+        await buildMiddleware({ logger, routePath, routeConfig }),
+      );
+    } catch (err: any) {
+      logger.error(
+        `Failed to configure route for ${routePath} due to ${err.message}`,
+        {
+          error: err,
+          ...routeConfig,
+        },
+      );
+    }
+  }
 
   return router;
 }
