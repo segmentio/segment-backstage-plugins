@@ -1,6 +1,12 @@
 app:
   title: Scaffolded Backstage App
   baseUrl: http://localhost:3000
+  analytics:
+    segment:
+      enabled: true
+      writeKey: ${SEGMENT_WRITE_KEY:-foobar}
+      testMode: true
+      debug: true
 
 organization:
   name: My Company
