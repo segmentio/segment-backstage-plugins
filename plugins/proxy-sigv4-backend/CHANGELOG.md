@@ -5,6 +5,10 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
 
 # 0.3.0 (2024-08-30)
 
+_Release only to fix missing `dist/index.d.ts` definitions_
+
+# 0.3.0 (2024-08-30)
+
 ### Features
 
 - **proxy-sigv4-backend:** migrate to aws-sdk v3 for js and remove deprecations ([#10](https://github.com/segmentio/segment-backstage-plugins/issues/10)) ([cac1d4a](https://github.com/segmentio/segment-backstage-plugins/commit/cac1d4a89015af48fcf1e2e274dcf330858e57cd))
