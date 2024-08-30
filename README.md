@@ -18,11 +18,12 @@
 
 <br>
 
-This repository contains a collection of [Backstage](https://backstage.io) plugins created and maintained by [Twilio Segment](https://segment.com). Installation instructions for each plugin can be found in their respective READMEs.
+This repository contains a collection of [Backstage](https://backstage.io) plugins created and maintained by [Twilio Segment][segment]. Installation instructions for each plugin can be found in their respective READMEs.
 
-| Package                                                                        | Description                                                                                  |
-| ------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------- |
-| [@segment/backstage-plugin-proxy-sigv4-backend](./plugins/proxy-sigv4-backend) | A Backstage backend plugin that proxies requests to AWS services using SigV4 authentication. |
+| Package                                                                                  | Description                                                                                                       |
+| ---------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
+| [@segment/backstage-plugin-analytics-module-segment](./plugins/analytics-module-segment) | A Backstage frontend analytics module plugin that provides [Backstage Analytics][analytics] to [Segment][segment] |
+| [@segment/backstage-plugin-proxy-sigv4-backend](./plugins/proxy-sigv4-backend)           | A Backstage backend plugin that proxies requests to AWS services using SigV4 authentication.                      |
 
 <br>
 
@@ -34,3 +35,6 @@ This repository contains a collection of [Backstage](https://backstage.io) plugi
 ## License
 
 Copyright 2023 Twilio Inc. Licensed under the Apache License, Version 2.0: <https://www.apache.org/licenses/LICENSE-2.0>
+
+[analytics]: https://backstage.io/docs/plugins/analytics
+[segment]: https://segment.com
