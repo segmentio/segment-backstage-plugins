@@ -12,7 +12,11 @@
     "types": "dist/index.d.ts"
   },
   "backstage": {
-    "role": "backend-plugin"
+    "role": "backend-plugin",
+    "pluginId": "proxy-sigv4",
+    "pluginPackages": [
+      "@segment/backstage-plugin-proxy-sigv4-backend"
+    ]
   },
   "repository": {
     "type": "git",
