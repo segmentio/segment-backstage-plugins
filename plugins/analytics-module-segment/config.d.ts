@@ -19,7 +19,7 @@ export interface Config {
         writeKey: string;
 
         /**
-         * Whether to log analytics debug statements to the console.
+         * Whether to log analytics debug statements and events to the console. Does not prevent sending of events.
          * Defaults to false.
          *
          * @visibility frontend
@@ -27,8 +27,8 @@ export interface Config {
         debug?: boolean;
 
         /**
-         * Prevents events from actually being sent when set to true. Defaults
-         * to false.
+         * Prevents events from actually being sent and instead logged as console output when set to true.
+         * Defaults to false.
          *
          * @visibility frontend
          */

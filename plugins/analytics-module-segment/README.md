@@ -117,7 +117,7 @@ export const apis: AnyApiFactory[] = [
 
 #### Optional: Prevent user identification
 
-If you wish to chose to identify Backstage users in analytics events, simply neglect to provide the `identityApi` when initializing the `SegmentAnalytics` API.
+If you choose not to identify Backstage users in analytics events, simply neglect to provide the `identityApi` when initializing the `SegmentAnalytics` API.
 
 ```ts
 // packages/app/src/apis.ts
