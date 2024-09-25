@@ -3,7 +3,13 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
-# 0.3.0 (2024-08-30)
+# 0.3.2 (2024-09-25)
+
+### Bug Fixes
+
+- **proxy-sigv4-backend:** revert to old body serialization to fix bug with body type ([#17](https://github.com/segmentio/segment-backstage-plugins/issues/17)) ([3012ee4](https://github.com/segmentio/segment-backstage-plugins/commit/3012ee4890813614d74528c4447a1f41e5c12c61))
+
+# 0.3.1 (2024-08-30)
 
 _Release only to fix missing `dist/index.d.ts` definitions_
 
