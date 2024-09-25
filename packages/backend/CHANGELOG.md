@@ -3,6 +3,10 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# 0.3.0 (2024-09-25)
+
+_version only change_
+
 # 0.2.0 (2024-08-30)
 
 ### Features
