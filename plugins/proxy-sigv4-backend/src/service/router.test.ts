@@ -224,7 +224,7 @@ describe('buildMiddleware', () => {
         expiration: new Date('2024-05-05T20:30:00Z'),
       });
 
-    // s
+    // starts the middleware and timer
     await buildMiddleware({
       logger,
       routePath: '/foo',

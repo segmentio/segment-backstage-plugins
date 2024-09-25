@@ -189,10 +189,9 @@ export async function buildMiddleware(
         headers: requestHeaders,
       };
 
-      if (req.method !== 'GET' && req.method !== 'HEAD') {
-        request.body = req.is('application/json')
-          ? JSON.stringify(req.body)
-          : req.body;
+      // TODO: support other content types with bodies
+      if (req.is('application/json') && req.method !== 'GET') {
+        request.body = JSON.stringify(req.body);
       }
 
       aws4.sign(request, credentials);
