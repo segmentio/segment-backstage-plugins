@@ -112,9 +112,13 @@ proxysigv4:
 
 ### Expanded form
 
-The expanded form is necessary when an `AssumeRole` call _is_ required, _or_ if the target API service and region cannot
-be automatically derived from the URL (commonplace when a custom domain name has been configured for an API Gateway
-endpoint).
+The expanded form is necessary when:
+
+- `AssumeRole` call _is_ required, _or_ if the target API service and region cannot
+  be automatically derived from the URL (commonplace when a custom domain name has been configured for an API Gateway
+  endpoint).
+- The service if not possible to determine it automatically.
+- The region if not possible to determine it automatically.
 
 ```yaml
 proxysigv4:
@@ -122,6 +126,8 @@ proxysigv4:
     target: 'https://<API ID>.execute-api.<region>.amazonaws.com'
     roleArn: 'arn:aws:iam::<account>:role/<name>'
     roleSessionName: tempAssumeRoleSession ## optional
+    service: '<service>' ## optional
+    region: '<region>' ## optional
 ```
 
 ### New Auth Services - Unauthorized Requests

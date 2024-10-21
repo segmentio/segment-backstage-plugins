@@ -45,7 +45,8 @@ export interface RouteConfig {
   target: string;
   roleArn?: string;
   roleSessionName?: string;
-  // TODO: support specifying/overriding `service` and `region` for CNAME'd endpoints
+  service?: string;
+  region?: string;
   // TODO: support specifying additional allowed forward headers
 }
 
@@ -69,6 +70,14 @@ export function normalizeRouteConfig(config: any): RouteConfig {
 
   if (typeof fullConfig.target !== 'string') {
     throw new TypeError(`Route target must be a string`);
+  }
+
+  if (fullConfig.service && typeof fullConfig.service !== 'string') {
+    throw new TypeError(`Route service must be a string`);
+  }
+
+  if (fullConfig.region && typeof fullConfig.region !== 'string') {
+    throw new TypeError(`Route region must be a string`);
   }
 
   try {
@@ -122,6 +131,8 @@ export async function buildMiddleware(
     target,
     roleArn,
     roleSessionName = 'backstage-plugin-proxy-sigv4-backend',
+    region,
+    service,
   } = routeConfig;
 
   const credentialsProvider = roleArn
@@ -187,6 +198,8 @@ export async function buildMiddleware(
         host: targetUrl.host,
         path: req.url, // path + search
         headers: requestHeaders,
+        service: service,
+        region: region,
       };
 
       // TODO: support other content types with bodies
