@@ -28,6 +28,14 @@ export interface Config {
            * Use this session name when performing the STS:AssumeRole call for roleArn. Default: 'tempAssumeRoleSession'.
            */
           roleSessionName?: string;
+          /**
+           * Name of the AWS service if is not possible to determine it automatically
+           */
+          service?: string;
+          /**
+           * Name of the AWS region if is not possible to determine it automatically
+           */
+          region?: string;
         };
   };
 }
