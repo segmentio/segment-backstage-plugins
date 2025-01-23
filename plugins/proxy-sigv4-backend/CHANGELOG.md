@@ -3,6 +3,13 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# 0.4.0 (2025-01-23)
+
+### Features
+
+- backstage v1.35 package bump ([#21](https://github.com/segmentio/segment-backstage-plugins/issues/21)) ([241f808](https://github.com/segmentio/segment-backstage-plugins/commit/241f808dfba1a1c411d9761d2cf914c44a90011e))
+- **proxy-sigv4-backend:** add region and service options ([#19](https://github.com/segmentio/segment-backstage-plugins/issues/19)) ([d05d196](https://github.com/segmentio/segment-backstage-plugins/commit/d05d196107e6b2b6273bb112f7a427db4ae46caa))
+
 # 0.3.2 (2024-09-25)
 
 ### Bug Fixes
