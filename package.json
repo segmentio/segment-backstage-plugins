@@ -3,11 +3,11 @@
   "version": "1.0.0",
   "private": true,
   "engines": {
-    "node": "18"
+    "node": "20"
   },
   "scripts": {
-    "dev": "concurrently \"yarn start\" \"yarn start-backend\"",
-    "dev:ci": "concurrently \"http-server --port 3000 --proxy http://localhost:3000? packages/app/dist\" \"yarn start-backend\"",
+    "dev": "NODE_OPTIONS=--no-node-snapshot concurrently \"yarn start\" \"yarn start-backend\"",
+    "dev:ci": "NODE_OPTIONS=--no-node-snapshot concurrently \"http-server --port 3000 --proxy http://localhost:3000? packages/app/dist\" \"yarn start-backend\"",
     "start": "yarn workspace app start",
     "start-backend": "yarn workspace backend start",
     "start-backend:ci": "yarn workspace backend backstage-cli package build && node packages/backend",
@@ -19,9 +19,9 @@
     "tsc": "tsc",
     "tsc:full": "tsc --skipLibCheck false --incremental false",
     "clean": "backstage-cli repo clean",
-    "test": "backstage-cli repo test --workerIdleMemoryLimit=800M --coverage --runInBand",
-    "test:all": "lerna run test -- --coverage --runInBand",
-    "test:e2e": "playwright test",
+    "test": "NODE_OPTIONS=--no-node-snapshot backstage-cli repo test --workerIdleMemoryLimit=800M --coverage --runInBand",
+    "test:all": "NODE_OPTIONS=--no-node-snapshot lerna run test -- --coverage --runInBand",
+    "test:e2e": "NODE_OPTIONS=--no-node-snapshot playwright test",
     "fix": "backstage-cli repo fix",
     "lint": "backstage-cli repo lint --since origin/main",
     "lint:all": "backstage-cli repo lint",
@@ -45,7 +45,7 @@
     "husky": "^8.0.3",
     "lerna": "^7.3.0",
     "lint-staged": "^15.0.2",
-    "node-gyp": "^9.0.0",
+    "node-gyp": "^10.0.0",
     "prettier": "^2.3.2",
     "typescript": "~5.2.0"
   },
@@ -63,5 +63,6 @@
     "*.{json,md}": [
       "prettier --write"
     ]
-  }
+  },
+  "packageManager": "yarn@1.22.21+sha1.1959a18351b811cdeedbd484a8f86c3cc3bbaf72"
 }
