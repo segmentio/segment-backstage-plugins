@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "private": true,
   "engines": {
-    "node": "20 || 22"
+    "node": "20"
   },
   "scripts": {
     "dev": "NODE_OPTIONS=--no-node-snapshot concurrently \"yarn start\" \"yarn start-backend\"",

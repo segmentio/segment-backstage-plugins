@@ -11,8 +11,9 @@ jobs:
     runs-on: ubuntu-latest
 
     strategy:
+      fail-fast: false # dont have failures in one node version cancel tests in another
       matrix:
-        node-version: [20.x, 22.x]
+        node-version: [20.x] # TODO: add 22.x after upgrade to backstage 1.33 https://github.com/backstage/backstage/issues/27626#issuecomment-2476133326
 
     steps:
       - uses: actions/checkout@v4
