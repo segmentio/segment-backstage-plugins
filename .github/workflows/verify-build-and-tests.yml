@@ -8,7 +8,7 @@ on:
 
 jobs:
   verify:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-latest-large
 
     strategy:
       fail-fast: false # dont have failures in one node version cancel tests in another
@@ -16,12 +16,12 @@ jobs:
         node-version: [20.x] # TODO: add 22.x after upgrade to backstage 1.33 https://github.com/backstage/backstage/issues/27626#issuecomment-2476133326
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: '0'
 
       - name: Use Node.js ${{ matrix.node-version }}
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
           node-version: ${{ matrix.node-version }}
 
