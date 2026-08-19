@@ -1,8 +1,15 @@
+import express from 'express';
+import { rest } from 'msw';
+import { setupServer } from 'msw/node';
+import request from 'supertest';
+
 import { mockServices } from '@backstage/backend-test-utils';
+import { registerMswTestHooks } from '@backstage/test-utils';
 
 import {
   buildMiddleware,
   createRouter,
+  joinUrl,
   normalizeRouteConfig,
   normalizeRoutePath,
   credentialsNeedRefresh,
@@ -17,6 +24,28 @@ const mockTemporaryCredentials = jest.fn().mockResolvedValue({
   accessKeyId: 'ACCESS_KEY_ID_TEMPORARY_CREDENTIALS',
   secretAccessKey: 'SECRET_ACCESS_KEY',
 });
+
+// SSRF_EXAMPLES provides a list of SSRF attack examples and their expected normalized paths
+const SSRF_EXAMPLES = [
+  ['//attacker.example.com/', ''],
+  ['%2F/attacker.example.com/', '%2F/attacker.example.com/'],
+  ['%2F%2Fattacker.example.com/', '%2F%2Fattacker.example.com/'],
+  ['\\attacker.example.com/', 'attacker.example.com/'],
+  ['%5C%5Cattacker.example.com/', '%5C%5Cattacker.example.com/'],
+  ['/%2Fattacker.example.com/', '%2Fattacker.example.com/'],
+  ['//trusted.internal@attacker.example.com/', ''],
+  [
+    '%2F%2Ftrusted.internal%40attacker.example.com/',
+    '%2F%2Ftrusted.internal%40attacker.example.com/',
+  ],
+  ['%252F%252Fattacker.example.com/', '%252F%252Fattacker.example.com/'],
+  [
+    '\uFF0F\uFF0Fattacker.example.com/',
+    '%EF%BC%8F%EF%BC%8Fattacker.example.com/',
+  ],
+  ['/%09/attacker.example.com/', '%09/attacker.example.com/'],
+  ['/%0A/attacker.example.com/', '%0A/attacker.example.com/'],
+];
 
 jest.mock('@aws-sdk/credential-providers', () => ({
   fromNodeProviderChain: jest
@@ -129,6 +158,68 @@ describe('normalizeRouteConfig', () => {
   });
 });
 
+describe('joinUrl', () => {
+  it('joins a request path onto the base URL', () => {
+    expect(joinUrl(new URL('https://example.com'), '/foo').toString()).toBe(
+      'https://example.com/foo',
+    );
+  });
+
+  it('preserves a path prefix on the base URL', () => {
+    expect(joinUrl(new URL('https://example.com/api'), '/foo').toString()).toBe(
+      'https://example.com/api/foo',
+    );
+  });
+
+  it('collapses a trailing slash on the base URL', () => {
+    expect(
+      joinUrl(new URL('https://example.com/api/'), '/foo').toString(),
+    ).toBe('https://example.com/api/foo');
+  });
+
+  it('preserves the query string from the request path', () => {
+    expect(
+      joinUrl(new URL('https://example.com'), '/foo?q=1&r=2').toString(),
+    ).toBe('https://example.com/foo?q=1&r=2');
+  });
+
+  it('rejects a host hijack via protocol-relative path', () => {
+    const joined = joinUrl(new URL('https://example.com'), '//evil.com/foo');
+    expect(joined.host).toBe('example.com');
+    expect(joined.toString()).toBe('https://example.com/foo');
+  });
+
+  it('rejects a host hijack via absolute URL in the request path', () => {
+    const joined = joinUrl(
+      new URL('https://example.com'),
+      'https://evil.com/foo',
+    );
+    expect(joined.host).toBe('example.com');
+    expect(joined.toString()).toBe('https://example.com/foo');
+  });
+
+  it('preserves the configured protocol when the base is http', () => {
+    expect(joinUrl(new URL('http://example.com'), '/foo').toString()).toBe(
+      'http://example.com/foo',
+    );
+  });
+
+  it('handles a root request path', () => {
+    expect(joinUrl(new URL('https://example.com/api'), '/').toString()).toBe(
+      'https://example.com/api/',
+    );
+  });
+
+  it.each(SSRF_EXAMPLES)(
+    'handles a request path that looks like an SSRF attempt: %s',
+    (path, expectedPath) => {
+      const joined = joinUrl(new URL('https://example.com'), path);
+      expect(joined.host).toBe('example.com');
+      expect(joined.toString()).toBe(`https://example.com/${expectedPath}`);
+    },
+  );
+});
+
 describe('credentialsNeedRefresh', () => {
   beforeEach(() => {
     jest.useFakeTimers().setSystemTime(new Date('2024-05-05T12:00:00Z'));
@@ -179,6 +270,10 @@ describe('credentialsNeedRefresh', () => {
 
 describe('buildMiddleware', () => {
   const logger = mockServices.rootLogger();
+
+  afterEach(() => {
+    jest.useRealTimers();
+  });
 
   it('resolves a middleware-like function', async () => {
     const mw = await buildMiddleware({
@@ -364,6 +459,165 @@ describe('createRouter', () => {
         logger,
       });
       expect(router).toBeDefined();
+    });
+  });
+
+  describe('proxying requests', () => {
+    const app = express();
+    const server = setupServer();
+    registerMswTestHooks(server);
+
+    beforeEach(async () => {
+      const config = mockServices.rootConfig({
+        data: {
+          backend: {
+            baseUrl: 'https://example.com:7007',
+            listen: {
+              port: 7007,
+            },
+          },
+          proxysigv4: {
+            '/test': 'https://example.com',
+          },
+        },
+      });
+      const router = await createRouter({
+        config,
+        logger,
+      });
+      app.use(router);
+    });
+
+    it('proxies requests and returns response from target service', async () => {
+      server.use(
+        rest.get('https://example.com', (_req, res, ctx) => {
+          return res(
+            ctx.status(200),
+            ctx.json({ message: 'Hello from target!' }),
+          );
+        }),
+      );
+
+      const response = await await request(app)
+        .get('/test/')
+        .set('x-msw-bypass', 'true');
+      expect(response.status).toBe(200);
+      expect(response.body).toEqual({ message: 'Hello from target!' });
+    });
+
+    it('proxies requests and forwards params', async () => {
+      expect.assertions(3);
+      server.use(
+        rest.get('https://example.com', (req, res, ctx) => {
+          expect(req.url.searchParams.get('param')).toBe('value');
+          return res(
+            ctx.status(200),
+            ctx.json({ message: 'Hello from target!' }),
+          );
+        }),
+      );
+
+      const response = await await request(app)
+        .get('/test/?param=value')
+        .set('x-msw-bypass', 'true');
+      expect(response.status).toBe(200);
+      expect(response.body).toEqual({ message: 'Hello from target!' });
+    });
+
+    it('proxies handles deep paths', async () => {
+      expect.assertions(3);
+      server.use(
+        rest.get('https://example.com/and/nested/paths', (req, res, ctx) => {
+          expect(req.url.searchParams.get('param')).toBe('value');
+          return res(
+            ctx.status(200),
+            ctx.json({ message: 'Hello from target!' }),
+          );
+        }),
+      );
+
+      const response = await await request(app)
+        .get('/test/and/nested/paths?param=value')
+        .set('x-msw-bypass', 'true');
+      expect(response.status).toBe(200);
+      expect(response.body).toEqual({ message: 'Hello from target!' });
+    });
+
+    it('does not allow for ssrf', async () => {
+      server.use(
+        rest.get('https://example.com/', (_req, res, ctx) => {
+          return res(
+            ctx.status(200),
+            ctx.json({ message: 'Hello from target!' }),
+          );
+        }),
+      );
+
+      const response = await await request(app)
+        .get('/test////other.domain.com')
+        .set('x-msw-bypass', 'true');
+      expect(response.status).toBe(200);
+      expect(response.body).toEqual({ message: 'Hello from target!' });
+    });
+
+    it.each(SSRF_EXAMPLES)(
+      'does not allow for ssrf: %s',
+      async (path, expectedPath) => {
+        server.use(
+          rest.get('https://example.com/*', (req, res, ctx) => {
+            return res(
+              ctx.status(404),
+              ctx.json({ message: `Naughty path! ${req.url.pathname}` }),
+            );
+          }),
+        );
+
+        const response = await await request(app)
+          .get(`/test/${path}`)
+          .set('x-msw-bypass', 'true');
+        expect(response.status).toBe(404);
+        expect(response.body).toEqual({
+          message: `Naughty path! /${expectedPath}`,
+        });
+      },
+    );
+
+    it('normalizes backslashes in the request path', async () => {
+      server.use(
+        rest.get('https://example.com/127.0.0.1:3007', (_req, res, ctx) => {
+          return res(
+            ctx.status(200),
+            ctx.json({ message: 'Hello from target!' }),
+          );
+        }),
+      );
+
+      const response = await await request(app)
+        .get('/test/\\127.0.0.1:3007')
+        .set('x-msw-bypass', 'true');
+
+      expect(response.status).toBe(200);
+      expect(response.body).toEqual({ message: 'Hello from target!' });
+    });
+
+    it('allows valid query params', async () => {
+      expect.assertions(3);
+      server.use(
+        rest.get('https://example.com/', (req, res, ctx) => {
+          expect(req.url.searchParams.get('q')).toBe('///some.other.domain');
+          return res(
+            ctx.status(200),
+            ctx.json({ message: 'Hello from target!' }),
+          );
+        }),
+      );
+
+      const response = await await request(app)
+        .get('/test?q=///some.other.domain')
+        .set('x-msw-bypass', 'true');
+
+      expect(response.status).toBe(200);
+      expect(response.body).toEqual({ message: 'Hello from target!' });
     });
   });
 });

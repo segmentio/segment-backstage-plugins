@@ -119,6 +119,24 @@ export const credentialsNeedRefresh = (
   credentials.expiration.getTime() - Date.now() <
     CREDENTIAL_NEED_REFRESH_BUFFER;
 
+/**
+ * Joins a request path onto a configured target URL while pinning protocol
+ * and host to the target. Only `.pathname` and `.search` are read from the
+ * parsed request URL, so an attacker-supplied `//evil.com/...` or
+ * `https://evil.com/...` cannot redirect the upstream call.
+ *
+ * @internal
+ */
+export function joinUrl(base: URL, requestPath: string): URL {
+  const incoming = new URL(requestPath, 'http://placeholder.invalid');
+  const basePath = base.pathname.replace(/\/+$/, '');
+  const incomingPath = incoming.pathname.replace(/^\/+/, '/');
+  const joined = new URL(base.toString());
+  joined.pathname = basePath + incomingPath;
+  joined.search = incoming.search;
+  return joined;
+}
+
 /** @internal */
 export async function buildMiddleware(
   options: MiddlewareOptions,
@@ -189,14 +207,14 @@ export async function buildMiddleware(
   ) => {
     try {
       const requestHeaders = filterHeaders(req.headers as HeadersMap);
-      const targetUrl = new URL(req.url, target);
+      const targetUrl = joinUrl(new URL(target), req.url);
 
       // request is provided to aws4.sign() and mutated in place for new headers
       const request: any = {
         method: req.method,
         protocol: targetUrl.protocol,
         host: targetUrl.host,
-        path: req.url, // path + search
+        path: targetUrl.pathname + targetUrl.search,
         headers: requestHeaders,
         service: service,
         region: region,
