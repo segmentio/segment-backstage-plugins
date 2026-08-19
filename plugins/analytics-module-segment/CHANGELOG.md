@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# 0.3.0 (2026-08-19)
+
+### Features
+
+- bump core backstage package versions ([#24](https://github.com/segmentio/segment-backstage-plugins/issues/24)) ([a0beb0a](https://github.com/segmentio/segment-backstage-plugins/commit/a0beb0a5d2682382b073d930cadc88ec2997211d))
+
 # 0.2.0 (2025-01-23)
 
 ### Features

@@ -3,6 +3,16 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# 0.5.0 (2026-08-19)
+
+### Bug Fixes
+
+- **proxy-sigv4-backend:** prevent host override ([#27](https://github.com/segmentio/segment-backstage-plugins/issues/27)) ([444e198](https://github.com/segmentio/segment-backstage-plugins/commit/444e198837b1ce5327ff15c774a369f086e6be61))
+
+### Features
+
+- bump core backstage package versions ([#24](https://github.com/segmentio/segment-backstage-plugins/issues/24)) ([a0beb0a](https://github.com/segmentio/segment-backstage-plugins/commit/a0beb0a5d2682382b073d930cadc88ec2997211d))
+
 # 0.4.0 (2025-01-23)
 
 ### Features
