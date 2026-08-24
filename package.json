@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "private": true,
   "engines": {
-    "node": "20"
+    "node": "22 || 24"
   },
   "scripts": {
     "start": "NODE_OPTIONS=--no-node-snapshot backstage-cli repo start",
@@ -35,12 +35,15 @@
     ]
   },
   "devDependencies": {
-    "@backstage/cli": "^0.33.0",
-    "@backstage/e2e-test-utils": "^0.1.1",
+    "@backstage/cli": "^0.36.4",
+    "@backstage/e2e-test-utils": "^0.1.2",
+    "@jest/environment-jsdom-abstract": "~30.2.0",
     "@playwright/test": "^1.32.3",
+    "@types/jest": "^30.0.0",
     "concurrently": "^8.0.0",
     "husky": "^8.0.3",
     "lerna": "^9.0.0",
+    "jest": "~30.2.0",
     "lint-staged": "^15.0.2",
     "node-gyp": "^10.0.0",
     "prettier": "^2.3.2",
@@ -60,6 +63,18 @@
     "*.{json,md}": [
       "prettier --write"
     ]
+  },
+  "backstage": {
+    "cli": {
+      "new": {
+        "globals": {
+          "license": "Apache-2.0",
+          "private": false,
+          "namePrefix": "@segment/",
+          "namePluginInfix": "backstage-plugin-"
+        }
+      }
+    }
   },
   "packageManager": "yarn@1.22.21+sha1.1959a18351b811cdeedbd484a8f86c3cc3bbaf72"
 }
