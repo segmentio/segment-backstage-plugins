@@ -1,0 +1,58 @@
+name: Publish Packages
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build-and-publish:
+    if: startsWith(github.event.head_commit.message, 'chore(release):')
+    runs-on: ubuntu-latest-large
+
+    timeout-minutes: 15
+
+    environment: production
+
+    # id-token: write lets Lerna 9 exchange a GitHub OIDC token for a short-lived,
+    # per-package npm token (keyless "trusted publishing"). contents: write is used
+    # by the release-tag/GitHub-release steps on the latest channel. Each package
+    # must be registered as a trusted publisher on npmjs.org for this repo +
+    # publish.yml + `production`, or its publish fails.
+    permissions:
+      contents: write
+      id-token: write
+
+    strategy:
+      matrix:
+        node-version: [20.x]
+
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: '0'
+          fetch-tags: true
+
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: ${{ matrix.node-version }}
+
+      # For eventual tag pushing and release creation
+      - name: Setup git credentials
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+      - name: Install Dependencies
+        run: yarn install --frozen-lockfile
+
+      - name: Build
+        run: NODE_ENV=production yarn build
+
+      - name: Publish
+        # Keyless publish via npm OIDC trusted publishing — no long-lived token.
+        # Lerna 9 auto-detects GitHub Actions OIDC (id-token: write above),
+        # exchanges it per-package for a short-lived npm token, and enables
+        # provenance automatically (public repo + public package).
+        run: yarn lerna publish from-package --yes --loglevel=verbose --dist-tag latest
