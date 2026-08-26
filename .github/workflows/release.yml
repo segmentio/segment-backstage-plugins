@@ -59,3 +59,11 @@ jobs:
         # exchanges it per-package for a short-lived npm token, and enables
         # provenance automatically (public repo + public package).
         run: yarn lerna publish from-package --yes --loglevel=verbose --dist-tag latest
+
+      - name: Fetch Latest Tags
+        run: |
+          git fetch --tags
+
+      - name: Generate Tags
+        id: get-release-tag
+        run: ./scripts/generate-release-tags.sh
