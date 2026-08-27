@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.5.0](https://github.com/segmentio/segment-backstage-plugins/compare/@segment/backstage-plugin-analytics-module-segment@0.4.0...@segment/backstage-plugin-analytics-module-segment@0.5.0) (2026-08-27)
+
+### Features
+
+- **analytics-module-segment:** adopt new frontend system ([#35](https://github.com/segmentio/segment-backstage-plugins/issues/35)) ([5f9270b](https://github.com/segmentio/segment-backstage-plugins/commit/5f9270b3ad4dbbacab135d9c23ef1debd7fbd74d))
+
 # 0.4.0 (2026-08-27)
 
 ### Features
