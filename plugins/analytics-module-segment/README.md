@@ -17,7 +17,25 @@ This plugin requires an active workspace with [Segment][segment]. Please referen
 yarn --cwd packages/app add @segment/backstage-plugin-analytics-module-segment
 ```
 
-### Wire up the API implementation to your App:
+### New frontend system
+
+Add the module to your app's frontend features:
+
+```ts
+// packages/app/src/App.tsx
+import segmentAnalyticsModule from '@segment/backstage-plugin-analytics-module-segment/alpha';
+
+const app = createApp({
+  features: [segmentAnalyticsModule],
+});
+```
+
+The module uses the configured Backstage identity when identifying users in
+Segment.
+
+### Legacy frontend system
+
+Wire up the API implementation to your app:
 
 ```ts
 // packages/app/src/apis.ts
