@@ -27,10 +27,10 @@ fi
 
 yarn lerna version --no-git-tag-version --no-private "$target_version"
 
-release_branch="release/$(date +%s)"
+release_branch="release-$(date +%s)"
 git switch --create "$release_branch"
 git add --all # include all files including any untracked
-git commit --all --message "chore(release): generate release"
+git commit --all --signoff --message "chore(release): generate release"
 git push --set-upstream origin "$release_branch"
 
 echo "Release notes generated and pushed to \"$release_branch\". Please open a pull request, get it reviewed, and merge to trigger package publishing."
