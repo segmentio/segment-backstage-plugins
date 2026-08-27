@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# 0.4.0 (2026-08-27)
+
+### Features
+
+- upgrade all the things - node, backstage core, etc. ([#32](https://github.com/segmentio/segment-backstage-plugins/issues/32)) ([691011f](https://github.com/segmentio/segment-backstage-plugins/commit/691011f220eb09b3b78f8c2698bf2cd31cb04e1a))
+
 # 0.3.0 (2026-08-19)
 
 ### Features
